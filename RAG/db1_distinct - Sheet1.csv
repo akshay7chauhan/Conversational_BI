@@ -1,0 +1,14 @@
+Column Name,Value
+market,California
+market,Arizona
+market,Florida
+submarket,Los_Angeles
+submarket,Bay_Area
+submarket,Central
+submarket,Western
+submarket,South
+submarket,Eastern
+sales_channel,EXT
+sales_channel,INT
+sales_channel,FIELD
+sales_channel,DIRECT

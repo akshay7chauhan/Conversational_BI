@@ -1,0 +1,16 @@
+market,submarket,sales_channel,calls,leads,sales
+California,Los_Angeles,EXT,123,67,45
+California,Los_Angeles,INT,321,278,143
+California,Los_Angeles,FIELD,234,176,111
+California,Bay_Area,INT,474,217,198
+California,Bay_Area,FIELD,46,12,10
+Arizona,Central,EXT,48,43,37
+Arizona,Central,INT,949,898,435
+Arizona,Western,INT,642,543,219
+Arizona,Western,EXT,94,78,76
+Arizona,South,INT,467,54,32
+Florida,Eastern,EXT,464,345,123
+Florida,Eastern,INT,253,198,150
+Florida,Eastern,FIELD,448,276,98
+Florida,Eastern,DIRECT,273,250,167
+Florida,Central,FIELD,494,309,201

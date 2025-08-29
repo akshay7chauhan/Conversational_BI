@@ -1,0 +1,334 @@
+Rule_ID,Question,Query,Insight,Dashboard
+000,What are the 10 Markets with the lowest Conversion Rate? How does their Conversion Rate compare to the average Conversion Rate by Market?,"WITH MarketConversionRates AS (
+    SELECT
+        market,
+        ROUND(CAST(SUM(leads) AS REAL) * 100 / NULLIF(CAST(SUM(calls) AS REAL), 0), 2) AS conversion_rate
+    FROM
+        table_dashboard1
+    GROUP BY
+        market
+),
+OverallAverageConversionRate AS (
+    SELECT
+        ROUND(AVG(conversion_rate), 2) AS avg_conversion_rate
+    FROM
+        MarketConversionRates
+)
+SELECT
+    mcr.market,
+    mcr.conversion_rate,
+    oacr.avg_conversion_rate
+FROM
+    MarketConversionRates mcr
+CROSS JOIN
+    OverallAverageConversionRate oacr
+WHERE
+    mcr.conversion_rate IS NOT NULL
+ORDER BY
+    mcr.conversion_rate ASC
+LIMIT 10;","Insight: California's conversion rate of 62.6% is notably below the overall market average of 69.13%, highlighting a key opportunity to improve lead conversion efficiency in this critical market.",Dashboard1
+000,What are the 10 Markets with the lowest Close Rate? How does their Close Rate compare to the average Close Rate by Market?,"```sql
+WITH market_close_rates AS (
+    SELECT
+        market,
+        ROUND(
+            CASE
+                WHEN SUM(leads) = 0 THEN 0.0
+                ELSE (CAST(SUM(sales) AS FLOAT) * 100.0) / (CAST(SUM(leads) AS FLOAT))
+            END,
+            2
+        ) AS close_rate
+    FROM table_dashboard1
+    GROUP BY market
+),
+overall_average_close_rate AS (
+    SELECT
+        ROUND(AVG(close_rate), 2) AS avg_close_rate_across_markets
+    FROM market_close_rates
+)
+SELECT
+    mcr.market,
+    mcr.close_rate,
+    oacr.avg_close_rate_across_markets
+FROM
+    market_close_rates AS mcr,
+    overall_average_close_rate AS oacr
+ORDER BY
+    mcr.close_rate ASC
+LIMIT 10;
+```","Insight: Arizona and Florida exhibit the lowest close rates at 49.44% and 53.63%, respectively, both significantly below the 56.89% market average, indicating critical areas for sales process optimization. While California is also listed, its 67.6% close rate actually surpasses the average, suggesting it's a strong performer among the limited markets analyzed.",Dashboard1
+000,What are the 10 Submarkets with the lowest Conversion Rate? How does their Conversion Rate compare to the average Conversion Rate by Submarket?,"```sql
+WITH SubmarketConversionRates AS (
+    SELECT
+        submarket,
+        ROUND(SUM(leads) * 100.0 / NULLIF(CAST(SUM(calls) AS FLOAT64), 0), 2) AS conversion_rate
+    FROM
+        table_dashboard1
+    GROUP BY
+        submarket
+    HAVING
+        NULLIF(CAST(SUM(calls) AS FLOAT64), 0) IS NOT NULL
+),
+OverallAverageConversionRate AS (
+    SELECT
+        ROUND(AVG(conversion_rate), 2) AS avg_conversion_rate
+    FROM
+        SubmarketConversionRates
+)
+SELECT
+    scr.submarket,
+    scr.conversion_rate,
+    oacr.avg_conversion_rate AS overall_average_conversion_rate,
+    ROUND(scr.conversion_rate - oacr.avg_conversion_rate, 2) AS difference_from_overall_average
+FROM
+    SubmarketConversionRates AS scr,
+    OverallAverageConversionRate AS oacr
+ORDER BY
+    scr.conversion_rate ASC
+LIMIT 10;
+```","South and Bay_Area submarkets exhibit critically low conversion rates (11.56% and 44.04%) compared to the 62.5% overall average; surprisingly, the other submarkets listed among the lowest still perform above this average, suggesting a concentrated underperformance in only a few key areas requiring immediate attention.",Dashboard1
+000,What are the 10 Submarkets with the lowest Close Rate? How does their Close Rate compare to the average Close Rate by Submarket?,"```sql
+WITH SubmarketCloseRates AS (
+    SELECT
+        submarket,
+        ROUND(CAST(SUM(sales) AS FLOAT) * 100.0 / NULLIF(CAST(SUM(leads) AS FLOAT), 0), 2) AS close_rate
+    FROM
+        table_dashboard1
+    GROUP BY
+        submarket
+),
+OverallAverageCloseRate AS (
+    SELECT
+        ROUND(AVG(close_rate), 2) AS avg_close_rate
+    FROM
+        SubmarketCloseRates
+)
+SELECT
+    scr.submarket,
+    scr.close_rate,
+    oacr.avg_close_rate AS overall_average_close_rate,
+    ROUND(scr.close_rate - oacr.avg_close_rate, 2) AS difference_from_average
+FROM
+    SubmarketCloseRates AS scr,
+    OverallAverageCloseRate AS oacr
+WHERE
+    scr.close_rate IS NOT NULL
+ORDER BY
+    scr.close_rate ASC
+LIMIT 10;
+```","Insight: The Western, Eastern, and Central submarkets exhibit the lowest close rates, ranging from 47.5% to 53.84%, significantly trailing the overall average of 59.86% by 6 to 12 percentage points. This highlights a critical need to investigate and optimize sales conversion strategies in these underperforming regions to boost revenue.",Dashboard1
+000,What are the 10 Sales Channels with the lowest Conversion Rate? How does their Conversion Rate compare to the average Conversion Rate by Sales Channel?,"```sql
+WITH ChannelCloseRates AS (
+    SELECT
+        sales_channel,
+        ROUND(
+            (CAST(SUM(sales) AS FLOAT) * 100.0) / NULLIF(CAST(SUM(leads) AS FLOAT), 0),
+            2
+        ) AS close_rate
+    FROM
+        table_dashboard1
+    GROUP BY
+        sales_channel
+),
+OverallAverageCloseRate AS (
+    SELECT
+        ROUND(AVG(close_rate), 2) AS average_close_rate
+    FROM
+        ChannelCloseRates
+)
+SELECT
+    ccr.sales_channel,
+    ccr.close_rate,
+    oacr.average_close_rate,
+    ROUND((ccr.close_rate - oacr.average_close_rate), 2) AS difference_from_average
+FROM
+    ChannelCloseRates AS ccr,
+    OverallAverageCloseRate AS oacr
+ORDER BY
+    ccr.close_rate ASC
+LIMIT 10;
+```","The 'EXT', 'INT', and 'FIELD' sales channels exhibit the lowest close rates, ranging from 52.72% to 54.33%, all underperforming the overall average of 56.91%. Prioritizing efforts to understand and improve these channels, particularly 'EXT' which is 4.19 percentage points below average, is crucial for enhancing overall sales efficiency.",Dashboard1
+001,What are the top 10 Markets with the highest Conversion Rate? How does their Conversion Rate compare to the average Conversion Rate by Market?,"WITH MarketConversionRates AS (
+  SELECT
+    market,
+    ROUND(COALESCE(CAST(SUM(leads) AS REAL) * 100 / NULLIF(SUM(calls), 0), 0.0), 2) AS conversion_rate
+  FROM
+    table_dashboard1
+  GROUP BY
+    market
+),
+OverallAverageConversionRate AS (
+  SELECT
+    ROUND(COALESCE(CAST(SUM(leads) AS REAL) * 100 / NULLIF(SUM(calls), 0), 0.0), 2) AS overall_avg_conversion_rate
+  FROM
+    table_dashboard1
+)
+SELECT
+  mcr.market,
+  mcr.conversion_rate,
+  oacr.overall_avg_conversion_rate
+FROM
+  MarketConversionRates AS mcr
+CROSS JOIN
+  OverallAverageConversionRate AS oacr
+ORDER BY
+  mcr.conversion_rate DESC
+LIMIT 10;","Insight: Arizona and Florida are standout performers with conversion rates of 73.45% and 71.33%, significantly exceeding the 70.24% overall average. Conversely, California's 62.60% conversion rate indicates a clear opportunity for improvement to catch up with the market leaders.",Dashboard1
+001,What are the top 10 Markets with the highest Close Rate? How does their Close Rate compare to the average Close Rate by Market?,"WITH MarketCloseRates AS (
+    SELECT
+        market,
+        -- Calculate close_rate, handling division by zero by returning NULL, and rounding to two decimal places.
+        CASE
+            WHEN SUM(leads) > 0 THEN ROUND(CAST(SUM(sales) AS FLOAT) * 100.0 / CAST(SUM(leads) AS FLOAT), 2)
+            ELSE NULL
+        END AS close_rate
+    FROM
+        table_dashboard1
+    GROUP BY
+        market
+),
+AverageOverallCloseRate AS (
+    SELECT
+        -- Calculate the average close rate across markets, excluding NULL values, and rounding to two decimal places.
+        ROUND(AVG(close_rate), 2) AS avg_close_rate_across_markets
+    FROM
+        MarketCloseRates
+    WHERE
+        close_rate IS NOT NULL
+)
+SELECT
+    mcr.market,
+    mcr.close_rate,
+    aocr.avg_close_rate_across_markets,
+    -- Calculate the difference from the overall average close rate and round to two decimal places.
+    ROUND((mcr.close_rate - aocr.avg_close_rate_across_markets), 2) AS difference_from_average
+FROM
+    MarketCloseRates mcr
+CROSS JOIN
+    AverageOverallCloseRate aocr
+WHERE
+    mcr.close_rate IS NOT NULL -- Filter to include only markets with a valid close rate
+ORDER BY
+    mcr.close_rate DESC
+LIMIT 10;
+","Insight: California leads the top markets with a 67.6% close rate, significantly outperforming the average market close rate of 56.89% by over 10 percentage points, highlighting a key opportunity to analyze and replicate its success across other regions.",Dashboard1
+001,What are the top 10 Submarkets with the highest Conversion Rate? How does their Conversion Rate compare to the average Conversion Rate by Submarket?,"```sql
+WITH SubmarketConversionRates AS (
+  SELECT
+    submarket,
+    ROUND(
+      (CAST(SUM(leads) AS FLOAT) * 100.0) / NULLIF(CAST(SUM(calls) AS FLOAT), 0),
+      2
+    ) AS conversion_rate
+  FROM
+    table_dashboard1
+  GROUP BY
+    submarket
+  HAVING
+    SUM(calls) > 0
+),
+AverageConversionRate AS (
+  SELECT
+    ROUND(AVG(conversion_rate), 2) AS avg_conversion_rate
+  FROM
+    SubmarketConversionRates
+)
+SELECT
+  scr.submarket,
+  scr.conversion_rate,
+  acr.avg_conversion_rate
+FROM
+  SubmarketConversionRates AS scr
+CROSS JOIN
+  AverageConversionRate AS acr
+ORDER BY
+  scr.conversion_rate DESC
+LIMIT 10;
+```","Insight: The Western, Central, Los Angeles, and Eastern submarkets are top performers, achieving conversion rates between 74.34% and 84.38%, significantly outperforming the overall average of 62.5%. This highlights strong regional success and potential best practices to boost conversion in lower-performing areas like the South submarket (11.56%).",Dashboard1
+001,What are the top 10 Submarkets with the highest Close Rate? How does their Close Rate compare to the average Close Rate by Submarket?,"WITH submarket_close_rates AS (
+  SELECT
+    submarket,
+    ROUND(CAST(SUM(sales) AS FLOAT) * 100.0 / NULLIF(CAST(SUM(leads) AS FLOAT), 0), 2) AS close_rate
+  FROM
+    table_dashboard1
+  GROUP BY
+    submarket
+),
+overall_avg_close_rate AS (
+  SELECT
+    ROUND(AVG(close_rate), 2) AS avg_close_rate
+  FROM
+    submarket_close_rates
+)
+SELECT
+  scr.submarket,
+  scr.close_rate,
+  oacr.avg_close_rate,
+  ROUND(scr.close_rate - oacr.avg_close_rate, 2) AS difference_from_average
+FROM
+  submarket_close_rates AS scr,
+  overall_avg_close_rate AS oacr
+WHERE
+  scr.close_rate IS NOT NULL
+ORDER BY
+  scr.close_rate DESC
+LIMIT 10;","Bay_Area is the top-performing submarket with a remarkable 90.83% close rate, significantly exceeding the average submarket close rate of 59.86% by over 30 percentage points. In contrast, the next highest-performing submarkets are all at or below the overall average, indicating a unique success story in Bay_Area that warrants further investigation.",Dashboard1
+001,What are the top 10 Sales Channels with the highest Conversion Rate? How does their Conversion Rate compare to the average Conversion Rate by Sales Channel?,"WITH ChannelConversionRates AS (
+    SELECT
+        sales_channel,
+        ROUND(
+            (CAST(SUM(leads) AS FLOAT) * 100.0) / NULLIF(CAST(SUM(calls) AS FLOAT), 0),
+            2
+        ) AS conversion_rate
+    FROM
+        table_dashboard1
+    GROUP BY
+        sales_channel
+),
+OverallConversionRate AS (
+    SELECT
+        ROUND(
+            (CAST(SUM(leads) AS FLOAT) * 100.0) / NULLIF(CAST(SUM(calls) AS FLOAT), 0),
+            2
+        ) AS overall_avg_conversion_rate
+    FROM
+        table_dashboard1
+)
+SELECT
+    ccr.sales_channel,
+    ccr.conversion_rate,
+    ocr.overall_avg_conversion_rate,
+    ROUND(
+        (ccr.conversion_rate - ocr.overall_avg_conversion_rate),
+        2
+    ) AS difference_from_average
+FROM
+    ChannelConversionRates ccr
+CROSS JOIN
+    OverallConversionRate ocr
+WHERE
+    ccr.conversion_rate IS NOT NULL
+ORDER BY
+    ccr.conversion_rate DESC
+LIMIT 10;","Insight: The 'DIRECT' sales channel is a top performer, converting 91.58% of leads, significantly above the 70.24% overall average, while 'FIELD' lags behind, indicating a need for strategic review.",Dashboard1
+001,What are the top 10 Sales Channels with the highest Close Rate? How does their Close Rate compare to the average Close Rate by Sales Channel?,"WITH ChannelCloseRates AS (
+  SELECT
+    sales_channel,
+    CASE
+      WHEN SUM(leads) = 0 THEN 0.0
+      ELSE ROUND(CAST(SUM(sales) AS FLOAT) * 100.0 / CAST(SUM(leads) AS FLOAT), 2)
+    END AS close_rate
+  FROM
+    table_dashboard1
+  GROUP BY
+    sales_channel
+)
+SELECT
+  sales_channel,
+  close_rate,
+  ROUND(AVG(close_rate) OVER (), 2) AS average_close_rate_all_channels
+FROM
+  ChannelCloseRates
+ORDER BY
+  close_rate DESC
+LIMIT 10;","Insight: The 'DIRECT' sales channel leads with an impressive 66.8% close rate, significantly outperforming the overall average of 56.91%, highlighting its strong conversion efficiency compared to other top channels like 'FIELD' and 'INT' which surprisingly fall below this average.",Dashboard1

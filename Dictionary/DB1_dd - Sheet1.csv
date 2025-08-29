@@ -1,0 +1,10 @@
+Column Name,Column Description,Calculation Formula,Data Type
+market,Market Name,,STRING
+submarket,Sub Market Name,,STRING
+sales_channel,Sales Channel Name,,STRING
+calls,Number of Calls made,,INT64
+leads,Number of Leads generated,,INT64
+sales,Number of Sales made,,INT65
+Calculations ,,,
+conversion rate,percentage of leads generated from calls made,SUM(leads)*100/SUM(calls),FLOAT64
+close rate,percentage of sales made from leads generated,SUM(sales)*100/SUM(leads),FLOAT65
